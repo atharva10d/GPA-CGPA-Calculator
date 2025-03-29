@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGPA & CGPA Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="greeting">Hello! Welcome to the SGPA & CGPA Calculator.</h1>
+            <div class="controls-header">
+                <button id="toggle-dark-mode" title="Toggle Light/Dark Theme"><i class="fas fa-moon"></i> Theme</button>
+            </div>
+        </header>
+
+        <!-- Initial Choice Section -->
+        <div id="initial-choice" class="card active">
+            <h2><i class="fas fa-calculator"></i> What would you like to calculate?</h2>
+            <div class="choice-buttons">
+                <button id="choose-sgpa" class="choice-btn"><i class="fas fa-chart-line"></i> Calculate SGPA</button>
+                <button id="choose-cgpa" class="choice-btn"><i class="fas fa-chart-bar"></i> Calculate CGPA</button>
+            </div>
+            <p class="info-text">Performance graphs will be displayed for both calculations.</p>
+        </div>
+
+        <!-- CGPA Section -->
+        <div id="cgpa-section" class="card hidden">
+            <h2><i class="fas fa-chart-bar"></i> CGPA Calculation</h2>
+
+            <!-- Year Selection -->
+            <div class="form-group">
+                <label for="current-year-cgpa">Select Your Current Academic Year:</label>
+                <select id="current-year-cgpa" required>
+                    <option value="">-- Select Year --</option>
+                    <option value="1">First Year</option>
+                    <option value="2">Second Year</option>
+                    <option value="3">Third Year</option>
+                    <option value="4">Fourth Year</option>
+                </select>
+            </div>
+
+            <!-- Branch Selection -->
+            <div class="form-group">
+                <label for="cgpa-branch">Select Your Branch:</label>
+                <select id="cgpa-branch" required>
+                    <option value="">-- Select Branch --</option>
+                    <option value="Comp/IT">Computer/IT Engineering</option>
+                    <option value="ENTC/Elec">ENTC/Electrical Engineering</option>
+                    <option value="Mech">Mechanical Engineering</option>
+                    <option value="Civil">Civil Engineering</option>
+                    <!-- Add FE Option if needed, though logic handles it -->
+                     <option value="FE">First Year (Common)</option>
+                </select>
+            </div>
+
+            <p class="info-text">Enter SGPA for the semesters shown below (up to your current year). Credits are determined automatically.</p>
+
+            <div id="previous-semesters">
+                <h3><i class="fas fa-history"></i> Enter Semester Details:</h3>
+                <p id="cgpa-prompt-message" class="info-text">Please select your current year and branch first.</p>
+                <!-- Semester rows will be dynamically added here -->
+            </div>
+
+            <button id="calculate-cgpa" disabled title="Select year and branch first"><i class="fas fa-calculator"></i> Calculate CGPA</button>
+
+            <!-- CGPA Results -->
+            <div id="cgpa-result" class="result hidden"></div>
+            <div id="percentage-result" class="result hidden"></div>
+
+            <!-- CGPA Chart -->
+            <div class="chart-container hidden" id="cgpa-chart-container">
+                <h3><i class="fas fa-chart-line"></i> SGPA Trend Over Semesters</h3>
+                <canvas id="cgpa-chart"></canvas>
+            </div>
+
+            <button class="back-button" data-target="initial-choice" data-hide="cgpa-section"><i class="fas fa-arrow-left"></i> Go Back</button>
+        </div>
+
+        <!-- SGPA Section -->
+        <div id="sgpa-section" class="card hidden">
+            <h2><i class="fas fa-chart-line"></i> SGPA Calculation</h2>
+
+            <div class="form-group">
+                <label for="branch">Select Branch:</label>
+                <select id="branch" required>
+                    <option value="">-- Select Branch --</option>
+                    <option value="FE">First Year (Common)</option>
+                    <option value="Comp/IT">Computer/IT Engineering</option>
+                    <option value="ENTC/Elec">ENTC/Electrical Engineering</option>
+                    <option value="Mech">Mechanical Engineering</option>
+                    <option value="Civil">Civil Engineering</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="year-sgpa">Select Year:</label>
+                <select id="year-sgpa" disabled required>
+                    <option value="">-- Select Year --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Select Semester Type:</label>
+                <div class="radio-group">
+                    <input type="radio" id="odd-sem" name="semester-type" value="odd" disabled>
+                    <label for="odd-sem">Odd (I, III, V, VII)</label>
+                    <input type="radio" id="even-sem" name="semester-type" value="even" disabled>
+                    <label for="even-sem">Even (II, IV, VI, VIII)</label>
+                </div>
+            </div>
+
+            <div id="subject-inputs">
+                <h3><i class="fas fa-book"></i> Enter Subject Details (Marks out of 100):</h3>
+                <!-- Subject inputs will be added dynamically -->
+            </div>
+
+            <button id="calculate-sgpa" disabled><i class="fas fa-calculator"></i> Calculate SGPA</button>
+
+            <div id="sgpa-result" class="result hidden"></div>
+
+            <div class="chart-container hidden" id="sgpa-chart-container">
+                <h3><i class="fas fa-chart-pie"></i> Weighted Grade Contribution per Subject</h3>
+                <canvas id="sgpa-chart"></canvas>
+            </div>
+
+            <button class="back-button" data-target="initial-choice" data-hide="sgpa-section"><i class="fas fa-arrow-left"></i> Go Back</button>
+        </div>
+
+        <!-- Grading Table Section -->
+        <div id="grading-table" class="card">
+            <h2><i class="fas fa-table"></i> SPPU CBCS Grading System</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Grade</th>
+                        <th>Grade Point</th>
+                        <th>Percentage Range (Marks)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td data-label="Grade">O</td><td data-label="Grade Point">10</td><td data-label="Percentage Range (Marks)">90-100</td></tr>
+                    <tr><td data-label="Grade">A+</td><td data-label="Grade Point">9</td><td data-label="Percentage Range (Marks)">80-89</td></tr>
+                    <tr><td data-label="Grade">A</td><td data-label="Grade Point">8</td><td data-label="Percentage Range (Marks)">70-79</td></tr>
+                    <tr><td data-label="Grade">B+</td><td data-label="Grade Point">7</td><td data-label="Percentage Range (Marks)">60-69</td></tr>
+                    <tr><td data-label="Grade">B</td><td data-label="Grade Point">6</td><td data-label="Percentage Range (Marks)">50-59</td></tr>
+                    <tr><td data-label="Grade">C</td><td data-label="Grade Point">5</td><td data-label="Percentage Range (Marks)">45-49</td></tr>
+                    <tr><td data-label="Grade">D</td><td data-label="Grade Point">4</td><td data-label="Percentage Range (Marks)">40-44</td></tr>
+                    <tr><td data-label="Grade">F</td><td data-label="Grade Point">0</td><td data-label="Percentage Range (Marks)">Below 40</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Syllabus Details Section -->
+        <div id="syllabus-info" class="card">
+            <details>
+                <summary><i class="fas fa-book-open"></i> View Syllabus Details (SPPU CBCS)</summary>
+                <div id="syllabus-content"></div>
+            </details>
+        </div>
+
+        <!-- Action Buttons Section -->
+        <div class="controls-footer card">
+            <h2><i class="fas fa-cog"></i> Actions</h2>
+            <div class="action-buttons">
+                <button id="save-screen" title="Save current view as PNG image"><i class="fas fa-image"></i> Save Screen as Image</button>
+                <button id="export-pdf" title="Export results and charts as PDF"><i class="fas fa-file-pdf"></i> Export Results as PDF</button>
+                <button id="calculate-comparison" title="Compare with previous performance"><i class="fas fa-chart-area"></i> Compare Performance</button>
+                <button id="reset-data" title="Clear all entered data"><i class="fas fa-trash"></i> Reset All Data</button>
+            </div>
+        </div>
+
+        <!-- Comparison Modal -->
+        <div id="comparison-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-modal">×</span>
+                <h2><i class="fas fa-chart-area"></i> Performance Comparison</h2>
+                <div class="comparison-container">
+                    <canvas id="comparison-chart"></canvas>
+                </div>
+                <p class="info-text">This chart shows your performance trend over different semesters.</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer id="footer">
+            <div class="footer-content">
+                <p><b>Designed by Atharva Zope</b></p>
+                <div class="footer-links">
+                    <a href="#" id="help-button" title="Get Help"><i class="fas fa-question-circle"></i> Help</a>
+                    <a href="#" id="feedback-button" title="Send Feedback"><i class="fas fa-comment"></i> Feedback</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">×</span>
+            <h2><i class="fas fa-question-circle"></i> Help Guide</h2>
+            <div class="help-content">
+                <h3>SGPA Calculation</h3>
+                <p>SGPA (Semester Grade Point Average) is calculated using the formula:</p>
+                <div class="formula">SGPA = ∑(Grade Point × Credit) / ∑(Credit)</div>
+                <p>Steps to calculate SGPA:</p>
+                <ol>
+                    <li>Select your branch</li>
+                    <li>Select year and semester</li>
+                    <li>Enter marks for each subject</li>
+                    <li>Click 'Calculate SGPA'</li>
+                </ol>
+
+                <h3>CGPA Calculation</h3>
+                <p>CGPA (Cumulative Grade Point Average) is calculated using the formula:</p>
+                <div class="formula">CGPA = ∑(SGPA × Semester Credit) / ∑(Semester Credit)</div>
+                <p>Steps to calculate CGPA:</p>
+                <ol>
+                    <li>Select your current year and branch</li>
+                    <li>Enter SGPA for each semester</li>
+                    <li>Click 'Calculate CGPA'</li>
+                </ol>
+
+                <h3>Additional Features</h3>
+                <ul>
+                    <li><i class="fas fa-image"></i> <strong>Save as Image:</strong> Captures the current view</li>
+                    <li><i class="fas fa-file-pdf"></i> <strong>Export as PDF:</strong> Creates a PDF with all results</li>
+                    <li><i class="fas fa-chart-area"></i> <strong>Compare Performance:</strong> Shows trends over time</li>
+                    <li><i class="fas fa-moon"></i> <strong>Theme Toggle:</strong> Switch between light and dark modes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">×</span>
+            <h2><i class="fas fa-comment"></i> Feedback</h2>
+            <form id="feedback-form">
+                <div class="form-group">
+                    <label for="feedback-name">Name (Optional):</label>
+                    <input type="text" id="feedback-name" placeholder="Your Name">
+                </div>
+                <div class="form-group">
+                    <label for="feedback-email">Email (Optional):</label>
+                    <input type="email" id="feedback-email" placeholder="Your Email">
+                </div>
+                <div class="form-group">
+                    <label for="feedback-type">Feedback Type:</label>
+                    <select id="feedback-type" required>
+                        <option value="">-- Select Type --</option>
+                        <option value="suggestion">Suggestion</option>
+                        <option value="bug">Bug Report</option>
+                        <option value="feature">Feature Request</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="feedback-content">Your Feedback:</label>
+                    <textarea id="feedback-content" rows="5" placeholder="Please enter your feedback here..." required></textarea>
+                </div>
+                <button type="submit"><i class="fas fa-paper-plane"></i> Submit Feedback</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
